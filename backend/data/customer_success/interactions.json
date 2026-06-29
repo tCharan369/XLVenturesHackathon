@@ -1,0 +1,82 @@
+[
+  {
+    "interaction_id": "int_seed_001",
+    "account_id": "acc_cs_003",
+    "timestamp": "2026-06-29T12:00:00Z",
+    "interaction_type": "meeting_note",
+    "source": "Customer Success Manager",
+    "title": "Champion Resigned",
+    "content": "Our primary champion Jane Doe has left the company. Tried reaching out to the new interim contact, Robert Chen, but emails remain unread. Champion change risk is very high since Jane was our main sponsor and renewal is due in 20 days.",
+    "tags": ["champion_change", "renewal"]
+  },
+  {
+    "interaction_id": "int_seed_002",
+    "account_id": "acc_cs_001",
+    "timestamp": "2026-06-29T12:15:00Z",
+    "interaction_type": "email",
+    "source": "Finance Director",
+    "title": "Budget Freeze",
+    "content": "Received email notification from procurement stating they have a company-wide budget freeze. Any expansion plans are temporarily on hold, and renewals are being scrutinized for cost cutting.",
+    "tags": ["budget_freeze"]
+  },
+  {
+    "interaction_id": "int_seed_003",
+    "account_id": "acc_cs_004",
+    "timestamp": "2026-06-29T12:30:00Z",
+    "interaction_type": "product_usage",
+    "source": "Telemetry System",
+    "title": "Usage Dropped 40%",
+    "content": "Weekly usage telemetry indicates active user count and query volume have dropped by 40% over the last 30 days. Feature adoption is declining rapidly.",
+    "tags": ["usage_decline"]
+  },
+  {
+    "interaction_id": "int_seed_004",
+    "account_id": "acc_cs_002",
+    "timestamp": "2026-06-29T12:45:00Z",
+    "interaction_type": "meeting_note",
+    "source": "CSM QBR Sync",
+    "title": "Expansion Request",
+    "content": "Customer is highly satisfied and requested scope/pricing for rolling out the platform to their EMEA marketing division (approx. 40 additional seats) in Q3.",
+    "tags": ["expansion_opportunity"]
+  },
+  {
+    "interaction_id": "int_seed_005",
+    "account_id": "acc_cs_006",
+    "timestamp": "2026-06-29T13:00:00Z",
+    "interaction_type": "email",
+    "source": "VP of Marketing",
+    "title": "Competitive Threat",
+    "content": "Customer informed us that they are evaluating an alternative vendor that pitched a cheaper solution. They are comparing features next week.",
+    "tags": ["competitive_threat"]
+  },
+  {
+    "interaction_id": "int_seed_006",
+    "account_id": "acc_cs_001",
+    "timestamp": "2026-06-29T13:15:00Z",
+    "interaction_type": "email",
+    "source": "Procurement Manager",
+    "title": "Pricing Objection",
+    "content": "Customer requested a discount on renewal terms. They mentioned they have competitive options and want a lower annual price.",
+    "tags": ["pricing_objection"]
+  },
+  {
+    "interaction_id": "int_seed_007",
+    "account_id": "acc_cs_004",
+    "timestamp": "2026-06-29T13:30:00Z",
+    "interaction_type": "support_ticket",
+    "source": "Support Portal",
+    "title": "Three P1 Incidents",
+    "content": "Three critical P1 performance issues opened within the last 7 days regarding API latency. SLA breach threshold was crossed.",
+    "tags": ["escalation"]
+  },
+  {
+    "interaction_id": "int_seed_008",
+    "account_id": "acc_cs_003",
+    "timestamp": "2026-06-29T13:45:00Z",
+    "interaction_type": "contract_event",
+    "source": "Legal Ops",
+    "title": "Procurement Delay",
+    "content": "Legal review of the contract extension has been delayed by the customer's internal buying committee. Delayed by at least 2 weeks.",
+    "tags": ["procurement_delay"]
+  }
+]

@@ -1,6 +1,7 @@
 import logging
 import json
 import time
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -13,15 +14,38 @@ from backend.registry.agent_registry import bootstrap_agents, get_agent
 from backend.core.planner import graph, planner_traces
 from backend.memory.episodic import SessionLocal, RecommendationRecord, FeedbackRecord
 from backend.security.input_guard import validate_interaction_input, ValidationError
+from backend.memory.interactions import (
+    create_interaction, get_interactions, get_recent_interactions,
+    get_interaction_stats, create_evolution, get_evolutions, get_latest_evolution,
+)
+from backend.agents.interaction_analyzer import analyze_interaction
+from backend.core.impact_engine import assess_impact
 
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("api")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """On startup, validate domain packs and bootstrap agents."""
+    logger.info("Initializing and validating domain packs...")
+    for pack_name in ["customer_success", "recruitment"]:
+        try:
+            load_domain_pack(pack_name)
+            logger.info(f"Validated domain pack: '{pack_name}'.")
+        except Exception as e:
+            logger.error(f"CRITICAL: Failed to validate '{pack_name}': {e}")
+            raise RuntimeError(f"Domain pack '{pack_name}' invalid: {e}")
+
+    logger.info("Bootstrapping agents in registry...")
+    bootstrap_agents()
+    yield
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="FastAPI backend for Agentic Decision Intelligence Platform"
+    description="FastAPI backend for Agentic Decision Intelligence Platform",
+    lifespan=lifespan
 )
 
 # CORS configuration from settings
@@ -50,23 +74,17 @@ class ApproveRequest(BaseModel):
 class ReflectRequest(BaseModel):
     domain_pack_id: str
 
+class InteractionRequest(BaseModel):
+    account_id: str
+    domain_pack_id: str
+    interaction_type: str
+    source: str
+    title: str
+    content: str
+    tags: Optional[List[str]] = None
 
-# ── Startup ──────────────────────────────────────────────────────────────────
 
-@app.on_event("startup")
-def startup_event():
-    """On startup, validate domain packs and bootstrap agents."""
-    logger.info("Initializing and validating domain packs...")
-    for pack_name in ["customer_success", "recruitment"]:
-        try:
-            load_domain_pack(pack_name)
-            logger.info(f"Validated domain pack: '{pack_name}'.")
-        except Exception as e:
-            logger.error(f"CRITICAL: Failed to validate '{pack_name}': {e}")
-            raise RuntimeError(f"Domain pack '{pack_name}' invalid: {e}")
-
-    logger.info("Bootstrapping agents in registry...")
-    bootstrap_agents()
+# ── Startup/Lifespan Handler Completed ────────────────────────────────────────
 
 
 # ── Health ───────────────────────────────────────────────────────────────────
@@ -416,7 +434,8 @@ def get_history(domain: str = Query("customer_success")):
                 ]
 
                 try:
-                    rec_data = json.loads(rec.recommendation_json)
+                    rec_json = rec.recommendation_json
+                    rec_data = json.loads(str(rec_json)) if rec_json is not None else {}
                 except Exception:
                     rec_data = {}
 
@@ -464,7 +483,8 @@ def get_previous_recommendation(
             prev = recs[1] if len(recs) > 1 else recs[0]
 
             try:
-                prev_data = json.loads(prev.recommendation_json)
+                prev_json = prev.recommendation_json
+                prev_data = json.loads(str(prev_json)) if prev_json is not None else {}
             except Exception:
                 prev_data = {}
 
@@ -659,4 +679,255 @@ def get_domain_config(domain: str = Query("customer_success")):
     except Exception as e:
         logger.error(f"Domain config error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Interaction Intelligence Endpoints ───────────────────────────────────────
+
+@app.post(f"{settings.API_V1_PREFIX}/interactions")
+def post_interaction(req: InteractionRequest):
+    """Ingest a new interaction, extract signals, assess impact, re-run planner, store evolution."""
+    try:
+        t0 = time.time()
+
+        # 1. Validate account exists
+        entities = load_accounts(req.domain_pack_id)
+        id_key = "account_id" if req.domain_pack_id == "customer_success" else "candidate_id"
+        entity = next((e for e in entities if e.get(id_key) == req.account_id), None)
+        if not entity:
+            raise HTTPException(status_code=404, detail=f"Entity '{req.account_id}' not found.")
+
+        # 2. Analyze interaction — extract signals
+        analysis = analyze_interaction(req.content, req.domain_pack_id, entity)
+        signals = analysis["signals"]
+        severity = analysis["severity"]
+
+        # 3. Compute impact
+        impact = assess_impact(signals, entity)
+
+        # 4. Fetch previous recommendation for this entity
+        prev_rec_data = None
+        prev_action_title = None
+        planner_before = "unknown"
+        with SessionLocal() as session:
+            prev_recs = (
+                session.query(RecommendationRecord)
+                .filter(
+                    RecommendationRecord.domain_pack_id == req.domain_pack_id,
+                    RecommendationRecord.entity_id == req.account_id,
+                )
+                .order_by(RecommendationRecord.created_at.desc())
+                .limit(1)
+                .all()
+            )
+            if prev_recs:
+                try:
+                    prev_rec_json = prev_recs[0].recommendation_json
+                    prev_rec_data = json.loads(str(prev_rec_json)) if prev_rec_json is not None else {}
+                    prev_action_title = prev_rec_data.get("selected_action", {}).get("title", "N/A")
+                except Exception:
+                    prev_rec_data = {}
+
+        # Determine planner_before from previous trace or default
+        # Check most recent trace for this entity
+        for trace in planner_traces.values():
+            if trace.get("entity_id") == req.account_id:
+                planner_before = trace.get("classification", "unknown")
+                break
+
+        # 5. Re-run planner with interaction text injected
+        from backend.core.llm_client import llm_call_counter
+        llm_call_counter.set(0)
+
+        domain_pack = load_domain_pack(req.domain_pack_id)
+
+        # Inject interaction into entity notes for the pipeline
+        entity_copy = {**entity}
+        interaction_text = f"{req.title}: {req.content}"
+        if req.domain_pack_id == "customer_success":
+            entity_copy["interaction_notes"] = interaction_text
+        else:
+            entity_copy["recruiter_notes"] = interaction_text
+
+        thread_id = str(uuid.uuid4())
+        state = {
+            "domain_pack": domain_pack,
+            "account": entity_copy,
+            "retrieved_context": {},
+            "reasoning_output": {},
+            "recommendation_output": {},
+            "explanation_output": {},
+            "evidence": [],
+            "confidence": {},
+            "human_feedback": None,
+            "metadata": {"thread_id": thread_id},
+        }
+        config = {"configurable": {"thread_id": thread_id}}
+
+        for event in graph.stream(state, config):
+            pass
+
+        checkpoint_state = graph.get_state(config)
+        vals = checkpoint_state.values
+        planner_after = vals.get("metadata", {}).get("routing_path", "unknown")
+
+        # Get new recommendation
+        new_rec = vals.get("explanation_output", {})
+        new_action_title = new_rec.get("selected_action", {}).get("title", "N/A")
+
+        # Build agent steps from trace
+        trace_data = planner_traces.get(thread_id, {})
+        agent_steps = trace_data.get("steps", [])
+        elapsed_ms = round((time.time() - t0) * 1000)
+
+        # Update trace metadata
+        planner_traces[thread_id] = {
+            **trace_data,
+            "thread_id": thread_id,
+            "domain_pack_id": req.domain_pack_id,
+            "entity_id": req.account_id,
+            "classification": planner_after,
+            "executed_path": _build_executed_path(planner_after),
+            "timestamps": {
+                "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(t0)),
+                "paused_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            },
+            "paused": True,
+            "execution_time_ms": elapsed_ms,
+            "triggered_by_interaction": True,
+        }
+
+        # 6. Build change reasons
+        change_reasons = []
+        for sig in signals:
+            change_reasons.append(sig.replace("_", " ").title())
+        if planner_before != planner_after:
+            change_reasons.append(f"Planner reclassified: {planner_before} -> {planner_after}")
+
+        # 7. Store interaction with full metadata
+        prev_rec_summary = {"title": prev_action_title} if prev_action_title else None
+        new_rec_summary = {"title": new_action_title, "confidence": new_rec.get("computed_confidence", {}).get("score", 0)}
+
+        interaction_record = create_interaction(
+            entity_id=req.account_id,
+            domain_pack_id=req.domain_pack_id,
+            interaction_type=req.interaction_type,
+            source=req.source,
+            title=req.title,
+            content=req.content,
+            tags=req.tags,
+            signals=signals,
+            impact_score=impact["impact_score"],
+            planner_before=planner_before,
+            planner_after=planner_after,
+            rec_before=prev_rec_summary,
+            rec_after=new_rec_summary,
+        )
+
+        # 8. Store recommendation evolution
+        create_evolution(
+            entity_id=req.account_id,
+            domain_pack_id=req.domain_pack_id,
+            interaction_id=interaction_record["interaction_id"],
+            previous_rec=prev_rec_summary,
+            new_rec=new_rec_summary,
+            change_reasons=change_reasons,
+        )
+
+        # 9. Build recommendation analysis for frontend
+        rec_analysis = _build_recommendation_analysis(vals)
+
+        return {
+            "interaction": interaction_record,
+            "signals": analysis,
+            "impact": impact,
+            "planner_before": planner_before,
+            "planner_after": planner_after,
+            "recommendation_before": prev_action_title,
+            "recommendation_after": new_action_title,
+            "change_reasons": change_reasons,
+            "thread_id": thread_id,
+            "recommendation": new_rec,
+            "routing_path": planner_after,
+            "execution_time_ms": elapsed_ms,
+            "status": "paused_for_approval",
+            "agent_steps": agent_steps,
+            "execution_summary": {
+                "total_agents": len(agent_steps),
+                "completed": sum(1 for s in agent_steps if s["status"] == "completed"),
+                "paused": sum(1 for s in agent_steps if s["status"] == "paused"),
+                "path_taken": planner_after,
+                "total_evidence": len(vals.get("evidence", [])),
+                "confidence_score": vals.get("confidence", {}).get("score", 0),
+            },
+            "recommendation_analysis": rec_analysis,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Interaction ingestion error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Interaction processing failure: {e}")
+
+
+@app.get(f"{settings.API_V1_PREFIX}/interactions")
+def get_interactions_api(
+    account_id: str = Query(...),
+    limit: int = Query(50),
+):
+    """List interactions for an entity, newest first."""
+    try:
+        return get_interactions(account_id, limit)
+    except Exception as e:
+        logger.error(f"Get interactions error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get(f"{settings.API_V1_PREFIX}/interactions/stats")
+def get_interactions_stats(
+    domain: str = Query("customer_success"),
+):
+    """Get interaction statistics for a domain."""
+    try:
+        return get_interaction_stats(domain)
+    except Exception as e:
+        logger.error(f"Interaction stats error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get(f"{settings.API_V1_PREFIX}/recommendation-diff")
+def get_recommendation_diff(
+    domain: str = Query("customer_success"),
+    entity_id: str = Query(...),
+):
+    """Get latest recommendation evolution diff for an entity."""
+    try:
+        evolution = get_latest_evolution(entity_id, domain)
+        if not evolution:
+            return {"has_diff": False, "previous": None, "current": None, "change_reasons": []}
+
+        return {
+            "has_diff": True,
+            "previous": evolution.get("previous_recommendation"),
+            "current": evolution.get("new_recommendation"),
+            "change_reasons": evolution.get("change_reasons", []),
+            "interaction_id": evolution.get("interaction_id"),
+            "created_at": evolution.get("created_at"),
+        }
+    except Exception as e:
+        logger.error(f"Recommendation diff error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get(f"{settings.API_V1_PREFIX}/recent-interactions")
+def get_recent_interactions_api(
+    domain: str = Query("customer_success"),
+    limit: int = Query(20),
+):
+    """List recent interactions across all entities, newest first."""
+    try:
+        return get_recent_interactions(domain, limit)
+    except Exception as e:
+        logger.error(f"Recent interactions error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 

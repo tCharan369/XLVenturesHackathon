@@ -3,12 +3,14 @@ import OverviewPanel from './sidebar/OverviewPanel'
 import AgentsPanel from './sidebar/AgentsPanel'
 import WhyThisPanel from './sidebar/WhyThisPanel'
 import WhatChangedPanel from './sidebar/WhatChangedPanel'
+import InteractionsPanel from './sidebar/InteractionsPanel'
 
 const NAV_ITEMS = [
-  { id: 'overview', icon: '', label: 'Overview' },
-  { id: 'agents', icon: '', label: 'Agent Execution' },
-  { id: 'why', icon: '', label: 'Why This?' },
-  { id: 'changed', icon: '', label: 'What Changed' },
+  { id: 'overview', label: 'Overview' },
+  { id: 'agents', label: 'Agent Execution' },
+  { id: 'why', label: 'Why This?' },
+  { id: 'changed', label: 'What Changed' },
+  { id: 'interactions', label: 'Interactions' },
 ]
 
 const PANELS = {
@@ -16,6 +18,7 @@ const PANELS = {
   agents: AgentsPanel,
   why: WhyThisPanel,
   changed: WhatChangedPanel,
+  interactions: InteractionsPanel,
 }
 
 export default function ExecutionSidebar() {
@@ -45,7 +48,6 @@ export default function ExecutionSidebar() {
                 className={`sidebar-nav-item ${sidebarPanel === item.id ? 'sidebar-nav-item--active' : ''}`}
                 onClick={() => setSidebarPanel(item.id)}
               >
-                <span className="sidebar-nav-icon">{item.icon}</span>
                 <span className="sidebar-nav-label">{item.label}</span>
               </button>
             ))}

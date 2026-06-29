@@ -2,9 +2,9 @@
 Recommendation Guard — policy engine to validate and rewrite recommendations before they are finalized.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
-def validate_recommendation(rec: Dict[str, Any], account: Dict[str, Any] = None) -> Dict[str, Any]:
+def validate_recommendation(rec: Dict[str, Any], account: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Validate recommendation outputs.
     Adjusts confidence, filters destructive recommendations, rewrites absolute claims,

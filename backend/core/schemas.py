@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional, Any, Union
-from datetime import datetime
+from datetime import datetime, timezone
 
 class DecisionPoint(BaseModel):
     """
@@ -181,7 +181,7 @@ class Recommendation(BaseModel):
     recommendation_sources: List[str] = Field(default_factory=list, description="Explicit record of sources (playbooks/past cases) that drove this action")
     reasoning_trace: List[str] = Field(default_factory=list, description="Internal agent chain of thought trace")
     computed_confidence: ComputedConfidence = Field(..., description="Calculated confidence score details")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when this recommendation was generated")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp when this recommendation was generated")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional recommendation metadata")
 
     model_config = {
@@ -216,7 +216,7 @@ class MemoryWrite(BaseModel):
     recommendation: Recommendation = Field(..., description="The recommendation that was shown to the human")
     human_feedback: Optional[str] = Field(None, description="Feedback text left by the human operator")
     outcome: str = Field(..., description="Outcome of human approval (e.g. approved, edited, rejected)")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when this interaction was completed")
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp when this interaction was completed")
 
     model_config = {
         "json_schema_extra": {

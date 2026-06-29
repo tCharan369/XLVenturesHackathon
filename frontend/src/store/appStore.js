@@ -15,4 +15,12 @@ export const useAppStore = create((set) => ({
   setExecutionData: (data) => set({ executionData: data }),
   outcomeData: null,
   setOutcomeData: (data) => set({ outcomeData: data }),
+
+  // Interaction Intelligence
+  interactions: [],
+  setInteractions: (list) => set({ interactions: list }),
+  interactionResult: null,
+  setInteractionResult: (data) => set({ interactionResult: data }),
+  interactionStats: null,
+  setInteractionStats: (data) => set({ interactionStats: data }),
 }))

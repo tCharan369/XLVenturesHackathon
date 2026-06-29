@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchDomain, fetchAccounts, postRecommend, postApprove, postReflect } from '../services/api'
+import { fetchDomain, fetchAccounts, postRecommend, postApprove, postReflect, postInteraction, fetchInteractions } from '../services/api'
 import AccountSelector from '../components/AccountSelector'
 import PipelineStatus from '../components/PipelineStatus'
 import ConfidenceBadge from '../components/ConfidenceBadge'
@@ -7,36 +7,79 @@ import CandidateCards from '../components/CandidateCards'
 import EvidenceAccordion from '../components/EvidenceAccordion'
 import ApprovalButtons from '../components/ApprovalButtons'
 import TraceTimeline from '../components/TraceTimeline'
+import InteractionModal from '../components/InteractionModal'
+import InteractionTimeline from '../components/InteractionTimeline'
+import RecentEventsPanel from '../components/RecentEventsPanel'
 
 import { useAppStore } from '../store/appStore'
+
+const PIPELINE_STEPS = [
+  { id: 'interaction', label: 'Interaction Received' },
+  { id: 'signals', label: 'Signal Extraction' },
+  { id: 'impact', label: 'Impact Assessment' },
+  { id: 'planner', label: 'Planner Reclassification' },
+  { id: 'context', label: 'Context Agent' },
+  { id: 'reasoning', label: 'Reasoning Agent' },
+  { id: 'recommendation', label: 'Recommendation Agent' },
+  { id: 'explanation', label: 'Explanation Agent' },
+  { id: 'approval', label: 'Human Approval' },
+]
+
+function PipelineProgressAnimation({ activeStep, steps }) {
+  return (
+    <div className="pipeline-progress">
+      {steps.map((step, i) => {
+        const isDone = i < activeStep
+        const isActive = i === activeStep
+        const isPaused = step.id === 'approval' && isDone
+        return (
+          <div key={step.id} className={`pipeline-step ${isDone ? 'pipeline-step--done' : ''} ${isActive ? 'pipeline-step--active' : ''} ${isPaused ? 'pipeline-step--paused' : ''}`}>
+            <div className="pipeline-step-dot">
+              {isDone && !isPaused && <span>&#10003;</span>}
+              {isPaused && <span>&#9646;</span>}
+              {isActive && <div className="pipeline-dot-pulse" />}
+            </div>
+            <span className="pipeline-step-label">{step.label}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function RecommendPage() {
   const activeDomain = useAppStore((state) => state.activeDomain)
   const setExecutionData = useAppStore((state) => state.setExecutionData)
   const setOutcomeData = useAppStore((state) => state.setOutcomeData)
   const setSidebarPanel = useAppStore((state) => state.setSidebarPanel)
+  const setInteractionResult = useAppStore((state) => state.setInteractionResult)
+  const setInteractions = useAppStore((state) => state.setInteractions)
 
   const [domain, setDomain] = useState(null)
   const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Workspace state
   const [selectedEntity, setSelectedEntity] = useState(null)
   const [recoData, setRecoData] = useState(null)
   const [recoLoading, setRecoLoading] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [outcomeResult, setOutcomeResult] = useState(null)
 
-  // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editedTitle, setEditedTitle] = useState('')
   const [editedDesc, setEditedDesc] = useState('')
   const [editFeedback, setEditFeedback] = useState('')
 
-  // Reflection
   const [reflectionData, setReflectionData] = useState(null)
   const [reflectLoading, setReflectLoading] = useState(false)
+
+  // Interaction state
+  const [isInteractionModalOpen, setIsInteractionModalOpen] = useState(false)
+  const [interactionLoading, setInteractionLoading] = useState(false)
+  const [pipelineStep, setPipelineStep] = useState(-1)
+  const [interactions, setLocalInteractions] = useState([])
+  const [showPipelineAnimation, setShowPipelineAnimation] = useState(false)
 
   useEffect(() => {
     loadData(activeDomain)
@@ -52,6 +95,8 @@ export default function RecommendPage() {
       setReflectionData(null)
       setExecutionData(null)
       setOutcomeData(null)
+      setInteractionResult(null)
+      setLocalInteractions([])
 
       const [domainData, accountsData] = await Promise.all([
         fetchDomain(domainName),
@@ -70,6 +115,10 @@ export default function RecommendPage() {
     setSelectedEntity(item)
     setRecoData(null)
     setOutcomeResult(null)
+    setLocalInteractions([])
+    setShowPipelineAnimation(false)
+    setPipelineStep(-1)
+    setInteractionResult(null)
   }
 
   const handleRunPipeline = async () => {
@@ -84,15 +133,77 @@ export default function RecommendPage() {
       setExecutionData(data)
       setSidebarPanel('agents')
 
-      // Initialize edit fields
       if (data.recommendation?.selected_action) {
         setEditedTitle(data.recommendation.selected_action.title || '')
         setEditedDesc(data.recommendation.selected_action.description || '')
       }
+
+      // Load interactions for this entity
+      const ints = await fetchInteractions(entityId).catch(() => [])
+      setLocalInteractions(ints)
+      setInteractions(ints)
     } catch (err) {
       alert(err.message)
     } finally {
       setRecoLoading(false)
+    }
+  }
+
+  const handleSubmitInteraction = async (formData) => {
+    if (!selectedEntity) return
+    const entityId = selectedEntity.account_id || selectedEntity.candidate_id
+
+    setInteractionLoading(true)
+    setShowPipelineAnimation(true)
+    setPipelineStep(0)
+
+    try {
+      // Animate through pipeline steps
+      const stepDelay = 400
+      const advanceStep = (step) => new Promise((r) => setTimeout(() => { setPipelineStep(step); r() }, stepDelay))
+
+      await advanceStep(1) // signals
+      await advanceStep(2) // impact
+
+      // Actually call the API
+      const result = await postInteraction({
+        account_id: entityId,
+        domain_pack_id: activeDomain,
+        ...formData,
+      })
+
+      await advanceStep(3) // planner
+      await advanceStep(4) // context
+      await advanceStep(5) // reasoning
+      await advanceStep(6) // recommendation
+      await advanceStep(7) // explanation
+      await advanceStep(8) // approval (paused)
+
+      // Update state with new recommendation
+      setRecoData(result)
+      setExecutionData(result)
+      setInteractionResult(result)
+      setIsInteractionModalOpen(false)
+
+      if (result.recommendation?.selected_action) {
+        setEditedTitle(result.recommendation.selected_action.title || '')
+        setEditedDesc(result.recommendation.selected_action.description || '')
+      }
+
+      // Reload interactions
+      const ints = await fetchInteractions(entityId).catch(() => [])
+      setLocalInteractions(ints)
+      setInteractions(ints)
+
+      // Switch to interactions panel
+      setSidebarPanel('interactions')
+
+    } catch (err) {
+      alert(`Interaction failed: ${err.message}`)
+      setShowPipelineAnimation(false)
+      setPipelineStep(-1)
+    } finally {
+      setInteractionLoading(false)
     }
   }
 
@@ -183,11 +294,14 @@ export default function RecommendPage() {
         {/* Main content */}
         <div>
           {!selectedEntity ? (
-            <AccountSelector
-              accounts={accounts}
-              activeDomain={activeDomain}
-              onSelect={handleSelectEntity}
-            />
+            <>
+              <AccountSelector
+                accounts={accounts}
+                activeDomain={activeDomain}
+                onSelect={handleSelectEntity}
+              />
+              <RecentEventsPanel />
+            </>
           ) : (
             <div className="recommendation-panel glass" style={{ padding: '30px', border: '1px solid var(--accent-purple)' }}>
               {/* Header */}
@@ -200,20 +314,40 @@ export default function RecommendPage() {
                     ID: {selectedEntity.account_id || selectedEntity.candidate_id} | {selectedEntity.plan_tier || selectedEntity.current_stage || '—'}
                   </p>
                 </div>
-                <button className="btn-ui btn-secondary-ui" onClick={() => setSelectedEntity(null)}>← Back</button>
+                <button className="btn-ui btn-secondary-ui" onClick={() => setSelectedEntity(null)}>&#8592; Back</button>
               </div>
 
+              {/* Pipeline Progress Animation */}
+              {showPipelineAnimation && (
+                <div style={{ margin: '20px 0' }}>
+                  <PipelineProgressAnimation activeStep={pipelineStep} steps={PIPELINE_STEPS} />
+                </div>
+              )}
+
+              {/* Interaction Timeline */}
+              {interactions.length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                  <InteractionTimeline interactions={interactions} />
+                </div>
+              )}
+
               {/* Pre-recommendation */}
-              {!recoData && !recoLoading && (
+              {!recoData && !recoLoading && !interactionLoading && (
                 <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                   <h3 style={{ margin: '0 0 10px 0', fontSize: '1.3rem' }}>Ready for Evaluation</h3>
                   <p style={{ maxWidth: '450px', margin: '0 auto 24px auto', fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '145%' }}>
-                    Run the LangGraph planner to classify this entity and generate a recommendation.
+                    Run the LangGraph planner to classify this entity and generate a recommendation — or add a customer interaction to evolve it in real time.
                   </p>
-                  <button className="btn-ui btn-primary-ui" onClick={handleRunPipeline}
-                    style={{ fontSize: '1.05rem', padding: '12px 24px' }}>
-                    Run Decision Pipeline
-                  </button>
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button className="btn-ui btn-primary-ui" onClick={handleRunPipeline}
+                      style={{ fontSize: '1.05rem', padding: '12px 24px' }}>
+                      Run Decision Pipeline
+                    </button>
+                    <button className="btn-ui btn-secondary-ui" onClick={() => setIsInteractionModalOpen(true)}
+                      style={{ fontSize: '1rem', padding: '12px 20px' }}>
+                      + Add Interaction
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -226,8 +360,20 @@ export default function RecommendPage() {
               )}
 
               {/* Results */}
-              {recoData && (
+              {recoData && !recoLoading && (
                 <div>
+                  {/* Action bar */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                    <button
+                      className="btn-ui btn-secondary-ui"
+                      onClick={() => setIsInteractionModalOpen(true)}
+                      disabled={interactionLoading}
+                      style={{ fontSize: '0.85rem', padding: '8px 16px' }}
+                    >
+                      {interactionLoading ? 'Processing...' : '+ Add Interaction'}
+                    </button>
+                  </div>
+
                   <PipelineStatus routingPath={recoData.routing_path} executionTimeMs={recoData.execution_time_ms} />
 
                   <div className="recommendation-grid">
@@ -241,8 +387,8 @@ export default function RecommendPage() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '4px' }}>
                           <span style={{ color: 'var(--text-secondary)' }}>Provenances:</span>
                           <span style={{ color: '#fff', fontWeight: '500' }}>
-                            {recoData.recommendation?.recommendation_sources?.length > 0 
-                              ? recoData.recommendation.recommendation_sources.join(', ') 
+                            {recoData.recommendation?.recommendation_sources?.length > 0
+                              ? recoData.recommendation.recommendation_sources.join(', ')
                               : 'no source documents matched'}
                           </span>
                         </div>
@@ -262,7 +408,7 @@ export default function RecommendPage() {
                         </div>
                       </div>
 
-                      {/* Advisory Warning Execution Policy */}
+                      {/* Advisory Warning */}
                       <div style={{
                         padding: '12px 16px',
                         marginBottom: '20px',
@@ -386,12 +532,21 @@ export default function RecommendPage() {
         </div>
       </div>
 
-      {/* Edit Modal Overlay */}
+      {/* Interaction Modal */}
+      <InteractionModal
+        isOpen={isInteractionModalOpen}
+        onClose={() => setIsInteractionModalOpen(false)}
+        onSubmit={handleSubmitInteraction}
+        activeDomain={activeDomain}
+        loading={interactionLoading}
+      />
+
+      {/* Edit Recommendation Modal */}
       {isEditModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content glass">
             <h3 style={{ margin: '0 0 16px 0', fontFamily: 'var(--heading-font)', color: '#fff' }}>Edit Recommendation & Approve</h3>
-            
+
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Action Title</label>
               <input

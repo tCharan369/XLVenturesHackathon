@@ -98,3 +98,42 @@ export async function fetchPreviousRecommendation(domainName, entityId) {
   }
 }
 
+export async function postInteraction(payload) {
+  const res = await fetch(`${API_BASE}/interactions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(`Interaction failed: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchInteractions(accountId) {
+  const res = await fetch(`${API_BASE}/interactions?account_id=${accountId}`)
+  if (!res.ok) throw new Error(`Fetch interactions failed: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchInteractionStats(domainName) {
+  const res = await fetch(`${API_BASE}/interactions/stats?domain=${domainName}`)
+  if (!res.ok) throw new Error(`Interaction stats failed: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchRecommendationDiff(domainName, entityId) {
+  try {
+    const res = await fetch(`${API_BASE}/recommendation-diff?domain=${domainName}&entity_id=${entityId}`)
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchRecentInteractions(domainName, limit = 20) {
+  const res = await fetch(`${API_BASE}/recent-interactions?domain=${domainName}&limit=${limit}`)
+  if (!res.ok) throw new Error(`Recent interactions failed: ${res.status}`)
+  return res.json()
+}
+
+
