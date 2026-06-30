@@ -1,0 +1,38 @@
+[
+  {
+    "candidate_id": "cand_rec_001",
+    "candidate_name": "Alice Vance",
+    "role_applied": "Senior React Developer",
+    "current_stage": "Technical Interview",
+    "expected_salary": 140000,
+    "interview_sentiment": "Strong positive - Aced the coding test",
+    "fit_score": 92,
+    "decision_deadline": "2026-07-10",
+    "recruiter_notes": "Interview (2026-06-25): Demonstrated deep understanding of React concurrent features. Showed interest in our scalability plans. However, she has two concurrent interviews elsewhere. Fast-track recommendation: Skip final project pass and move directly to Director sync.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  },
+  {
+    "candidate_id": "cand_rec_002",
+    "candidate_name": "Marcus Aurelius",
+    "role_applied": "Lead Site Reliability Engineer",
+    "current_stage": "Offer Stage",
+    "expected_salary": 175000,
+    "interview_sentiment": "Negative trend - Slow responses to HR",
+    "fit_score": 55,
+    "decision_deadline": "2026-06-30",
+    "recruiter_notes": "HR Follow-up (2026-06-26): Sent draft offer letter 3 days ago. No acknowledgement yet. Previously mentioned they were expecting a counter-offer from their current employer. Drop-off risk identified: High risk of offer declination due to counter-offer.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  },
+  {
+    "candidate_id": "cand_rec_003",
+    "candidate_name": "Sarah Connor",
+    "role_applied": "Junior Machine Learning Engineer",
+    "current_stage": "Screening",
+    "expected_salary": 95000,
+    "interview_sentiment": "Stable interest",
+    "fit_score": 82,
+    "decision_deadline": "2026-07-20",
+    "recruiter_notes": "Screening Call (2026-06-24): Strong foundation in python and pytorch. Eager to work on LLM integrations. Background checks look clean. Standard progression: Move to technical coding panel next week.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  }
+]

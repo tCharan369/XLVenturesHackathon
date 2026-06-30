@@ -1,0 +1,23 @@
+[
+  {
+    "interview_id": "int_001",
+    "candidate_id": "cand_rec_001",
+    "stage": "Technical Interview",
+    "notes": "Exceptional coding skills. Demonstrated concurrent features expertise and high scalability awareness.",
+    "updated_at": "2026-06-25T14:30:00Z"
+  },
+  {
+    "interview_id": "int_002",
+    "candidate_id": "cand_rec_002",
+    "stage": "Technical Screen",
+    "notes": "Strong site reliability foundations. Slow response times and feedback on compensation mismatch.",
+    "updated_at": "2026-06-26T11:00:00Z"
+  },
+  {
+    "interview_id": "int_003",
+    "candidate_id": "cand_rec_003",
+    "stage": "Screening",
+    "notes": "Good baseline in PyTorch and mathematical models. Moving to standard programming panel.",
+    "updated_at": "2026-06-24T16:00:00Z"
+  }
+]

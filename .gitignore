@@ -1,1 +1,12 @@
 .env
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.npm-cache/
+dist/
+backend/data/platform.db
+backend/data/chroma/
+*.egg-info/
+.DS_Store
+.env.example

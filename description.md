@@ -242,17 +242,17 @@ MemoryWrite {
 | LLMs | Claude — Sonnet for reasoning/recommendation/explanation, Haiku for classification/routing | Cost-aware routing is a scored differentiator — log which model handled which call |
 | Vector store | ChromaDB, local, embedded (no server) | Zero infra setup, no risk of a hosted dependency failing mid-demo |
 | Episodic memory | SQLite | Zero setup, vibe-codes reliably via SQLAlchemy; tag every row with `domain_pack_id` |
-| Backend | FastAPI (or call agents directly from Streamlit if FastAPI adds no value) | Keep it Python end-to-end |
-| Frontend | **Streamlit** | Single-language stack for faster, more reliable vibe-coding. See Streamlit-specific risks below. |
+| Backend | FastAPI | Serves domain configuration, accounts, and runs the agentic pipeline |
+| Frontend | **React (Vite)** | Modern SPA with Outfit/Inter typography, responsive layouts, and glassmorphic aesthetics |
 | Observability | **LangSmith** | Near-zero setup with LangGraph (env vars only) — gives a real execution trace viewer for free |
 | Deployment | Local only, run live during the demo | A flawless local run beats a flaky hosted one |
 
-### Streamlit-specific risks (read before building the UI)
+### React-specific design guidelines
 
-- **Rerun-on-every-interaction model fights long-running pipelines.** Use `st.session_state` to hold pipeline/interrupt state — a button click must not re-trigger the planner from scratch. Validate this against a trivial dummy LangGraph pipeline before wiring up real agents.
-- **Evidence display**: render as an expandable list (source → excerpt → recency → reliability score) via `st.expander`, not an interactive node graph. Equally legible to a judge, far less build time.
-- **Ranked candidates panel**: `st.columns`, with non-chosen candidates showing `rejected_reason` in muted text.
-- **Demo-critical actions should be manual, not automatic**: the reflective memory step gets a "Run reflection" button. The domain-pack switch (extensibility + multi-domain proof) is a deliberate dropdown/button, rehearsed, not something left to fire automatically.
+- **State synchronization with backend.** Use React hooks (`useState`, `useEffect`) to fetch state from the FastAPI backend. Ensure components re-render only when state changes.
+- **Evidence display**: render as clean expandable lists/accordions (source → excerpt → recency → reliability score) to keep the layout legible.
+- **Ranked candidates panel**: use a structured grid layout, rendering non-chosen candidates with their `rejected_reason` clearly visible in muted typography.
+- **Demo-critical manual actions**: include a manual trigger button for the "Run reflection" memory step. The domain-pack switch dropdown should dynamically update active states and load configuration from the backend.
 
 ---
 

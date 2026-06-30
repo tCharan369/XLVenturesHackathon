@@ -1,0 +1,38 @@
+{
+  "id": "customer_success",
+  "name": "Customer Success",
+  "version": "1.0",
+  "description": "Customer Success domain pack for SaaS account management and renewal intelligence.",
+  "entities": [
+    "Customer",
+    "Account",
+    "Product"
+  ],
+  "workflows": [
+    "Renewal",
+    "Upsell",
+    "Escalation"
+  ],
+  "decision_points": [
+    "renewal_risk",
+    "upsell_opportunity",
+    "champion_change_risk",
+    "escalation_risk"
+  ],
+  "business_rules": [],
+  "success_metrics": [
+    "net_revenue_retention",
+    "renewal_rate",
+    "customer_health"
+  ],
+  "tools": [],
+  "prompt_overrides": {
+    "context_agent": "",
+    "reasoning_agent": "Prioritize high expansion opportunities and champion stability.",
+    "recommendation_agent": "",
+    "explanation_agent": ""
+  },
+  "metadata": {
+    "created_by": "system"
+  }
+}

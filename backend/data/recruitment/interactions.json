@@ -1,0 +1,52 @@
+[
+  {
+    "interaction_id": "int_seed_rec_001",
+    "account_id": "cand_rec_002",
+    "timestamp": "2026-06-29T12:00:00Z",
+    "interaction_type": "internal_note",
+    "source": "Recruiter",
+    "title": "Candidate Disengaged",
+    "content": "Candidate has not responded to last two outreach attempts. Marcus showed strong interest initially but has gone quiet during final staging.",
+    "tags": ["candidate_dropoff"]
+  },
+  {
+    "interaction_id": "int_seed_rec_002",
+    "account_id": "cand_rec_001",
+    "timestamp": "2026-06-29T12:15:00Z",
+    "interaction_type": "call_transcript",
+    "source": "Recruiter Call",
+    "title": "Competing Offer Received",
+    "content": "Alice disclosed that she received a competing offer from a rival firm. It offers a higher salary of 155,000 and remote work options.",
+    "tags": ["competing_offer"]
+  },
+  {
+    "interaction_id": "int_seed_rec_003",
+    "account_id": "cand_rec_001",
+    "timestamp": "2026-06-29T12:30:00Z",
+    "interaction_type": "internal_note",
+    "source": "Interview Panel",
+    "title": "Strong Interview Performance",
+    "content": "Candidate did an amazing job on the technical system design round. Aced all coding exercises. Strong fit for the team.",
+    "tags": ["strong_fit"]
+  },
+  {
+    "interaction_id": "int_seed_rec_004",
+    "account_id": "cand_rec_001",
+    "timestamp": "2026-06-29T12:45:00Z",
+    "interaction_type": "email",
+    "source": "Alice Vance",
+    "title": "Salary Negotiation Request",
+    "content": "Alice emailed asking if there is flexibility to increase the starting base salary to match her competitive offer expectation of 150k.",
+    "tags": ["salary_concern"]
+  },
+  {
+    "interaction_id": "int_seed_rec_005",
+    "account_id": "cand_rec_003",
+    "timestamp": "2026-06-29T13:00:00Z",
+    "interaction_type": "internal_note",
+    "source": "Hiring Manager",
+    "title": "Urgent Hiring Need",
+    "content": "Our Senior ML engineer resigned today. We have an urgent hiring need to backfill this position as soon as possible.",
+    "tags": ["urgent_hiring_need"]
+  }
+]

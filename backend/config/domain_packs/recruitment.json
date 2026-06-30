@@ -1,0 +1,42 @@
+{
+  "id": "recruitment",
+  "name": "Recruitment",
+  "version": "1.0",
+  "description": "Staffing and Recruitment domain pack for screening and offer workflows in candidate hiring pipelines.",
+  "entities": [
+    "Candidate",
+    "Job",
+    "Interview"
+  ],
+  "workflows": [
+    "Screening",
+    "Offer"
+  ],
+  "decision_points": [
+    "candidate_dropoff_risk",
+    "fast_track_opportunity"
+  ],
+  "business_rules": [
+    {
+      "rule": "fit_score > 85",
+      "action": "fast_track"
+    }
+  ],
+  "success_metrics": [
+    "time_to_hire"
+  ],
+  "tools": [
+    "ATS",
+    "Resume Parser",
+    "Email"
+  ],
+  "prompt_overrides": {
+    "context_agent": "",
+    "reasoning_agent": "Focus on candidate dropout risk and offer negotiation optimization.",
+    "recommendation_agent": "",
+    "explanation_agent": ""
+  },
+  "metadata": {
+    "created_by": "system"
+  }
+}

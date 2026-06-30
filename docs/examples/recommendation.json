@@ -1,0 +1,66 @@
+{
+  "recommendation_id": "rec_cs_001_example",
+  "entity_id": "acc_cs_001",
+  "domain_pack_id": "customer_success",
+  "candidate_actions": [
+    {
+      "id": "action_schedule_training",
+      "title": "Schedule Team Training Session",
+      "description": "Invite users to a hands-on training to address lower adoption rate.",
+      "rationale": "Directly tackles the analyst team's adoption issues identified in notes.",
+      "expected_impact": "Increase usage adoption by 15-20% within 30 days.",
+      "confidence": 0.82,
+      "rejected_reason": "Less immediate impact than solving technical API latency issues."
+    },
+    {
+      "id": "action_escalate_api_performance",
+      "title": "Escalate API Performance Support Ticket",
+      "description": "Engage engineering team to solve API performance support ticket #4412.",
+      "rationale": "High priority ticket open for 5 days is blocking active user flows.",
+      "expected_impact": "Resolve user friction, improve sentiment, protect renewal contract.",
+      "confidence": 0.91,
+      "rejected_reason": null
+    }
+  ],
+  "selected_action": {
+    "id": "action_escalate_api_performance",
+    "title": "Escalate API Performance Support Ticket",
+    "description": "Engage engineering team to solve API performance support ticket #4412.",
+    "rationale": "High priority ticket open for 5 days is blocking active user flows.",
+    "expected_impact": "Resolve user friction, improve sentiment, protect renewal contract.",
+    "confidence": 0.91,
+    "rejected_reason": null
+  },
+  "evidence": [
+    {
+      "source": "accounts.json",
+      "source_type": "database",
+      "content": "Health score is 42, usage trend is -25% over last 30 days.",
+      "confidence": 1.0,
+      "metadata": {
+        "account_id": "acc_cs_001"
+      }
+    },
+    {
+      "source": "interaction_notes",
+      "source_type": "crm",
+      "content": "Support Ticket #4412 regarding API performance has been open for 5 days.",
+      "confidence": 0.95,
+      "metadata": {
+        "date": "2026-06-10"
+      }
+    }
+  ],
+  "reasoning_trace": [
+    "Context Agent: Loaded account data and flagged usage drops.",
+    "Reasoning Agent: Correlated -25% usage trend with open API performance ticket #4412.",
+    "Recommendation Agent: Selected API support ticket escalation as primary action to restore adoption."
+  ],
+  "computed_confidence": {
+    "score": 0.91,
+    "evidence_count": 2,
+    "source_agreement": 1.0,
+    "historical_acceptance_rate": 0.88
+  },
+  "created_at": "2026-06-27T18:10:00Z"
+}

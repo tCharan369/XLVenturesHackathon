@@ -1,0 +1,20 @@
+[
+  {
+    "job_id": "job_001",
+    "title": "Senior React Developer",
+    "department": "Engineering",
+    "status": "active"
+  },
+  {
+    "job_id": "job_002",
+    "title": "Lead Site Reliability Engineer",
+    "department": "Infrastructure",
+    "status": "active"
+  },
+  {
+    "job_id": "job_003",
+    "title": "Junior Machine Learning Engineer",
+    "department": "AI Research",
+    "status": "active"
+  }
+]

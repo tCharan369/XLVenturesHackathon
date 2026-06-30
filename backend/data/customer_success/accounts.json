@@ -1,0 +1,74 @@
+[
+  {
+    "account_id": "acc_cs_001",
+    "company_name": "ApexAnalytics Inc.",
+    "industry": "FinTech",
+    "plan_tier": "Enterprise",
+    "annual_contract_value": 120000,
+    "usage_trend": "-25% over last 30 days",
+    "health_score": 42,
+    "renewal_date": "2026-09-15",
+    "interaction_notes": "CSM Sync (2026-06-10): Customer mentioned they are seeing lower adoption among their analyst team. Support Ticket #4412: Open for 5 days regarding API performance. Risk flagged: High likelihood of downsize or churn if adoption does not pick up. Sent follow-up training resources but no response yet.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  },
+  {
+    "account_id": "acc_cs_002",
+    "company_name": "CloudSphere Solutions",
+    "industry": "Cloud Infrastructure",
+    "plan_tier": "Pro",
+    "annual_contract_value": 48000,
+    "usage_trend": "+40% over last 30 days",
+    "health_score": 95,
+    "renewal_date": "2026-11-01",
+    "interaction_notes": "CSM QBR Sync (2026-06-20): Customer is extremely happy with the platform's reliability. They are currently using 95% of their allocated api quota. Mentioned they will soon need to support another internal team of 15 users. Opportunity identified: Upsell to Enterprise tier to unlock higher API limits and SSO capabilities.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  },
+  {
+    "account_id": "acc_cs_003",
+    "company_name": "BioHealth Systems",
+    "industry": "Healthcare",
+    "plan_tier": "Enterprise",
+    "annual_contract_value": 180000,
+    "usage_trend": "-5% over last 30 days",
+    "health_score": 60,
+    "renewal_date": "2026-08-30",
+    "interaction_notes": "Email Thread (2026-06-15): Out of office reply indicates our primary champion, Jane Doe (VP of Analytics), has left the company. Tried reaching out to the new interim contact, Robert Chen, but emails remain unread. Champion change risk is very high since Jane was our main sponsor and renewal is in 2 months.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  },
+  {
+    "account_id": "acc_cs_004",
+    "company_name": "ZettaBytes Data",
+    "industry": "Data Engineering",
+    "plan_tier": "Pro",
+    "annual_contract_value": 36000,
+    "usage_trend": "Stable",
+    "health_score": 35,
+    "renewal_date": "2026-10-15",
+    "interaction_notes": "Escalation log (2026-06-24): Customer had a major data latency issue yesterday resulting in an SLA breach. CTO sent an angry email stating this is the third outage this quarter. support ticket #5591 marked as CRITICAL. Customer is requesting a call with leadership to discuss compensation and contract termination terms.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  },
+  {
+    "account_id": "acc_cs_005",
+    "company_name": "Vertex Retail",
+    "industry": "E-Commerce",
+    "plan_tier": "Standard",
+    "annual_contract_value": 18000,
+    "usage_trend": "Stable",
+    "health_score": 88,
+    "renewal_date": "2027-02-15",
+    "interaction_notes": "CSM Check-in (2026-06-18): Customer reports everything is running smoothly. They completed their onboarding training phase and are actively using all core dashboard features. Usage is steady and health score is strong. No concerns or open issues reported.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  },
+  {
+    "account_id": "acc_cs_006",
+    "company_name": "NovaMedia Corp",
+    "industry": "Digital Media",
+    "plan_tier": "Pro",
+    "annual_contract_value": 60000,
+    "usage_trend": "+15% over last 30 days",
+    "health_score": 85,
+    "renewal_date": "2026-12-05",
+    "interaction_notes": "Sync call (2026-06-22): Customer expressed interest in expanding their footprint. They want to roll out the platform to their EMEA marketing division (approx. 40 seats) in Q3. Current plan tier is Pro; will need to scope an add-on expansion contract or plan migration.",
+    "updated_at": "2026-06-27T10:00:00Z"
+  }
+]
